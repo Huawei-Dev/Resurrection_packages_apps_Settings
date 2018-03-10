@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.os.UserHandle;
 import android.os.PowerManager;
 import android.os.ServiceManager;
+import android.os.SystemProperties;
 import android.support.v7.preference.PreferenceCategory;
 import android.support.v7.preference.ListPreference;
 import android.support.v7.preference.Preference;
@@ -43,9 +44,12 @@ import lineageos.providers.LineageSettings;
 
 public class Buttons extends ActionFragment implements Preference.OnPreferenceChangeListener {
     private static final String HWKEY_DISABLE = "hardware_keys_disable";
+    private static final String HWKEY_FPS_DISABLE = "hardware_keys_fps_disable";
+    private static String FPNAV_ENABLED_PROP = "sys.fpnav.enabled";
 
     // category keys
     private static final String CATEGORY_HWKEY = "hardware_keys";
+    private static final String CATEGORY_HWKEY_FPS = "hardware_keys_fps";
     private static final String CATEGORY_BACK = "back_key";
     private static final String CATEGORY_HOME = "home_key";
     private static final String CATEGORY_MENU = "menu_key";
@@ -69,6 +73,7 @@ public class Buttons extends ActionFragment implements Preference.OnPreferenceCh
     public static final int KEY_MASK_VOLUME = 0x40;
 
     private SwitchPreference mHwKeyDisable;
+    private SwitchPreference mHwKeyFpsDisable;
 
     private CustomSeekBarPreference mButtonTimoutBar;
     private CustomSeekBarPreference mManualButtonBrightness;
@@ -125,6 +130,15 @@ public class Buttons extends ActionFragment implements Preference.OnPreferenceCh
         } else {
             prefScreen.removePreference(hwkeyCat);
         }
+
+        // FPS
+        int keysFpsDisabled = 0;
+	mHwKeyFpsDisable = (SwitchPreference) findPreference(HWKEY_FPS_DISABLE);
+        keysFpsDisabled = Settings.Secure.getIntForUser(getContentResolver(),
+                Settings.Secure.HARDWARE_KEYS_FPS_DISABLE, 0,
+                UserHandle.USER_CURRENT);
+        mHwKeyFpsDisable.setChecked(keysFpsDisabled != 0);
+        mHwKeyFpsDisable.setOnPreferenceChangeListener(this);
 
         // bits for hardware keys present on device
         final int deviceKeys = getResources().getInteger(
@@ -185,6 +199,7 @@ public class Buttons extends ActionFragment implements Preference.OnPreferenceCh
 
         // load preferences first
         setActionPreferencesEnabled(keysDisabled == 0);
+        setActionPreferencesEnabled(keysFpsDisabled == 0);
     }
 
     @Override
@@ -194,7 +209,13 @@ public class Buttons extends ActionFragment implements Preference.OnPreferenceCh
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
-        if (preference == mHwKeyDisable) {
+	if (preference == mHwKeyFpsDisable) {
+            boolean value = (Boolean) newValue;
+            Settings.Secure.putInt(getContentResolver(), Settings.Secure.HARDWARE_KEYS_FPS_DISABLE,
+                    value ? 1 : 0);
+	    SystemProperties.set(FPNAV_ENABLED_PROP, value ? "1" : "0");
+            setActionPreferencesEnabled(!value);
+        } else if (preference == mHwKeyDisable) {
             boolean value = (Boolean) newValue;
             Settings.Secure.putInt(getContentResolver(), Settings.Secure.HARDWARE_KEYS_DISABLE,
                     value ? 1 : 0);

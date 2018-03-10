@@ -32,6 +32,18 @@
     </PreferenceCategory>
 
     <PreferenceCategory
+        android:key="hardware_keys_fps"
+        android:title="@string/hardware_keys_fps_category" >
+
+     <PreferenceScreen
+            android:key="rr_hw_keys_fps"
+            android:fragment="com.android.settings.rr.fragments.Buttons"
+            android:summary="@string/rr_hw_keys_fps_summary"
+            android:title="@string/hardware_keys_fps_category"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
         android:key="power_key"
         android:title="@string/hardware_keys_power_key_title" >
 
